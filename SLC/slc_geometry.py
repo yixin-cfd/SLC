@@ -6,6 +6,8 @@ import json
 from typing import Union
 from pathlib import Path
 from slc_io import RawData
+import numpy as np
+from slc_numeric import Pchip
 
 class RawData:
     def __init__(self, path: Union[str, Path]):
@@ -25,14 +27,22 @@ class Geometry:
     def __init__(self, path: Union[str, Path]):
         data = RawData(path).data
         self.J = data['M']  # 流线数量
-        self.I = data['N']
+        self.build_flow_path(data=data)
+        self.build_blades(data=data)
+
     def build_flow_path(self, data):
         # 构建流道
-        pass
-    def build_stations(self, data):
+        hub = np.array(data["CHANNEL"]["hub"], dtype=np.float32)
+        shroud = np.array(data["CHANNEL"]["shroud"], dtype=np.float32)
+        self.hub = Pchip(hub[:, 0], hub[:, 1])
+        self.shroud = Pchip(shroud[:, 0], shroud[:, 1])
+
+    def build_blades(self, data):
         # 构建计算站
-        pass
-    def build_geometry(self, date):
+        blades = data['BLADES']
+        print(blades)
+
+    def build_grid(self, date):
         # 构建计算网格
         pass
 
@@ -40,9 +50,9 @@ class Geometry:
 if __name__ == '__main__':
     # Example usage (provide a valid path to your JSON file)
     try:
-        raw_data = RawData("TP1493.json")
+        raw_data = RawData("cases/TP1493.json")
         data = raw_data.data
-        print(data)  # or use the data for further processing
-        Geometry("TP1493.json")
+        # print(data)  # or use the data for further processing
+        Geometry("cases/TP1493.json")
     except Exception as e:
         print(f"Error: {e}")
